@@ -1,6 +1,15 @@
 package View;
 
+/**
+ * Общий интерфейс для вывода результатов.
+ *
+ * @author Vladislav Tumanov
+ */
 public interface ResultView {
 
-    void show(long l);
+    /**
+     * Метод отображающий результат применения правил.
+     * @param count Количество данных, соотвсетсвующих правилу.
+     */
+    void show(long count);
 }
