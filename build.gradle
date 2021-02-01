@@ -1,6 +1,17 @@
 plugins {
     id 'java'
+    //id 'java-library'
     id 'idea'
+    id 'application'
+}
+
+mainClassName = 'Main'
+
+sourceCompatibility = 14
+targetCompatibility = 14
+
+jar {
+    manifest.attributes('Main-Class': 'Main')
 }
 
 group 'org.example'
@@ -13,6 +24,7 @@ repositories {
 dependencies {
     testImplementation(platform('org.junit:junit-bom:5.7.0'))
     testImplementation('org.junit.jupiter:junit-jupiter')
+    testCompile group: 'org.mockito', name: 'mockito-core', version: '3.7.7'
 }
 
 test {
