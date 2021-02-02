@@ -1,18 +1,14 @@
 package Service;
 
-import Exceptions.OperatorException;
-import Exceptions.ParenthesisException;
-import Exceptions.RepositoryException;
+import Exceptions.*;
 import Repository.AnimalRepository;
 import Repository.RulesRepository;
-import Repository.RulesRepositoryImpl;
 import Utils.PredicateParser;
 import View.ResultView;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * Класс, содержащий основную логику работы приложения.
@@ -46,13 +42,19 @@ public class AnimalService {
      * Метод запускающий обаботку входных данных с выводом результата в {@link AnimalService#view}.
      * @throws RepositoryException если возникли проблемы с доступом.
      * @throws OperatorException если в правиле неверно указаны операторы.
+     * @throws OperandException если в правиле неверно указан операнд.
      * @throws ParenthesisException если в правиле неверно расставлены скобки.
+     * @throws ColumnIndexOutOfBoundsException если индекс колонки находится за пределами данных.
      */
-    public void run() throws RepositoryException, OperatorException, ParenthesisException {
-        List<String> animals = animalRepository.getAnimals();
-        getPredicates().stream()
-                .mapToLong(pred -> animals.stream().filter(pred).count())
-                .forEach(view::show);
+    public void run() {
+        try {
+            List<String[]> animals = animalRepository.getAnimals();
+            getPredicates().stream()
+                    .mapToLong(pred -> animals.stream().filter(pred).count())
+                    .forEach(view::show);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new ColumnIndexOutOfBoundsException(e.getMessage());
+        }
     }
 
     /**
@@ -62,9 +64,8 @@ public class AnimalService {
      * @throws OperatorException если в правиле неверно указаны операторы.
      * @throws ParenthesisException если в правиле неверно расставлены скобки.
      */
-    private List<Predicate<String>> getPredicates() throws RepositoryException, OperatorException,
-            ParenthesisException {
-        List<Predicate<String>> predicates = new ArrayList<>();
+    private List<Predicate<String[]>> getPredicates() throws RepositoryException {
+        List<Predicate<String[]>> predicates = new ArrayList<>();
 
         for (var rule : rulesRepository.getRules())
             predicates.add(PredicateParser.parse(rule));

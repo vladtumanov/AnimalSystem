@@ -1,4 +1,3 @@
-import Exceptions.*;
 import Repository.AnimalRepositoryImpl;
 import Repository.RulesRepositoryImpl;
 import Service.AnimalService;
@@ -13,9 +12,12 @@ import java.util.logging.Logger;
  */
 public class Main {
 
-    private static final Logger logger = Logger.getLogger(Main.class.getName());
+    private static final Logger logger = Logger.getLogger(AnimalService.class.getName());
 
-    /** Точка входа. Инициализация сервисного класса. */
+    /**
+     * Точка входа. Инициализация сервисного класса.
+     * @param args аргументы запуска.
+     */
     public static void main(String[] args) {
 
         AtomicInteger number = new AtomicInteger();
@@ -29,7 +31,7 @@ public class Main {
 
         try {
             animalService.run();
-        } catch (RepositoryException | OperatorException | ParenthesisException e) {
+        } catch (RuntimeException e) {
             logger.log(Level.WARNING, e.getMessage(), e);
         }
     }

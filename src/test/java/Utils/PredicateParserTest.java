@@ -34,23 +34,22 @@ class PredicateParserTest {
 
     @Test
     void correctPredicates() {
-        String key1 = "foo";
-        String key2 = "bar";
+        String key1 = "1=foo";
+        String key2 = "2=bar";
+        String[] row = new String[] {"foo", "fizz"};
 
-        AtomicReference<Predicate<String>> actual = new AtomicReference<>();
+        AtomicReference<Predicate<String[]>> actual = new AtomicReference<>();
 
         assertDoesNotThrow(() -> actual.set(PredicateParser.parse(key1)));
-        assertTrue(actual.get().test(key1));
+        assertTrue(actual.get().test(row));
 
         assertDoesNotThrow(() -> actual.set(PredicateParser.parse("not " + key1)));
-        assertFalse(actual.get().test(key1));
+        assertFalse(actual.get().test(row));
 
         assertDoesNotThrow(() -> actual.set(PredicateParser.parse(key1 + " or " + key2)));
-        assertTrue(actual.get().test(key1));
-        assertTrue(actual.get().test(key2));
+        assertTrue(actual.get().test(row));
 
         assertDoesNotThrow(() -> actual.set(PredicateParser.parse(key1 + " and " + key2)));
-        assertFalse(actual.get().test(key1));
-        assertFalse(actual.get().test(key2));
+        assertFalse(actual.get().test(row));
     }
 }

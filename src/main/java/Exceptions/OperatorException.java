@@ -5,7 +5,7 @@ package Exceptions;
  *
  * @author Vladislav Tumanov
  */
-public class OperatorException extends Exception {
+public class OperatorException extends RuntimeException {
 
     /**
      * Создаёт исключение {@code OperatorException} с указанным подробным сообщением.

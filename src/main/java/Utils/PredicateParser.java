@@ -1,5 +1,6 @@
 package Utils;
 
+import Exceptions.OperandException;
 import Exceptions.OperatorException;
 import Exceptions.ParenthesisException;
 
@@ -28,16 +29,21 @@ public final class PredicateParser {
      * Работа данного объекта построена на функии {@link String#contains(CharSequence)}.
      * <p>Для правил установлен следущий формат входных данных:
      * <p>- в качестве разделителя используется пробел;
-     * <p>- применятся только операторы and, or, not;
+     * <p>- условия указываются совместно с номером колонки, к которым
+     * они отностяся через знак равенства (напр. 1=KEY);
+     * <p>- нумерация колонок начинается слева с единицы;
+     * <p>- применяются только операторы and, or, not;
      * <p>- допускается использование круглых скобок;
-     * <p>- плавила чувствительны к регистру (напр. or != OR).
-     * <p>Пример: (KEY1 or KEY2) and not KEY3.
+     * <p>- операторы чувствительны к регистру (напр. or != OR).
+     * <p>Пример: (1=KEY1 or 2=KEY2) and not 3=KEY3.
      * @param rule Строкое представление правла.
      * @return {@link Predicate} представляющий правило.
      * @throws ParenthesisException если в правиле неверно расставлены скобки.
      * @throws OperatorException если в правиле неверно указаны операторы.
+     * @throws OperandException если в правиле неверно указан операнд.
      */
-    public static synchronized Predicate<String> parse(String rule) throws ParenthesisException, OperatorException {
+    public static synchronized Predicate<String[]> parse(String rule) throws ParenthesisException,
+            OperatorException, OperandException {
         return doParse(toRPN(rule));
     }
 
@@ -56,7 +62,7 @@ public final class PredicateParser {
 
         for (var element : rulesArray) {
             switch (element) {
-                case "or", "and", "not" -> gotOper(element);
+                case "or", "and", "not" -> gotOperator(element);
                 case "(" -> tempStack.push(element);
                 case ")" -> gotParen();
                 case "" -> {} //skip empty
@@ -73,7 +79,7 @@ public final class PredicateParser {
      * Метод, обрабатывающий операторы в выражении и сортирующий его в соостветствии с ОПН.
      * @param operator Оператор правила.
      */
-    private static void gotOper(String operator) {
+    private static void gotOperator(String operator) {
         while (!tempStack.isEmpty()) {
             String opTop = tempStack.pop();
             if (opTop.equals("(")) {
@@ -178,10 +184,11 @@ public final class PredicateParser {
      * @param rpn ОПН как список элементов.
      * @return {@link Predicate} представляющий правило.
      */
-    private static Predicate<String> doParse(List<String> rpn) {
-        Deque<Predicate<String>> merged = new ArrayDeque<>();
-        Predicate<String> pred1, pred2;
+    private static Predicate<String[]> doParse(List<String> rpn) {
+        Deque<Predicate<String[]>> merged = new ArrayDeque<>();
+        Predicate<String[]> pred1, pred2;
 
+        // element format 1="KEY"
         for (var element : rpn) {
             if (element.equals("not")) {
                 pred2 = merged.pop();
@@ -191,7 +198,14 @@ public final class PredicateParser {
                 pred1 = merged.pop();
                 merged.push(element.equals("or") ? pred1.or(pred2) : pred1.and(pred2));
             } else {
-                merged.push(p -> p.contains(element)); // <-- Create predicate is here
+                try {
+                    String[] columnRule = element.split("=");
+                    int column = Integer.parseInt(columnRule[0]);
+                    // Note: in String[] column index with 0, but in rule with 1.
+                    merged.push(p -> p[column - 1].equalsIgnoreCase(columnRule[1])); // <-- Create predicate is here
+                } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                    throw new OperandException(e.getMessage());
+                }
             }
         }
         return merged.pop();

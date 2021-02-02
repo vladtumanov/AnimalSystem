@@ -3,13 +3,13 @@ package Repository;
 import Exceptions.RepositoryException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Singleton. Класс для доступа к основным данным из репозитория.
- * Для основных данных установлен следущий формат данных:
- * - в качестве разделителя используется знак ';' (точка с запятой);
- * - поиск данных чувствителен к регистру.
- * Пример: (KEY1 or KEY2) and not KEY3.
+ * <p>Для основных данных установлен следущий формат данных:
+ * <p>- в качестве разделителя используется знак ';' (точка с запятой);
+ * <p>Пример: Свойство1;Свойство2;Свойство3;...
  *
  * @author Vladislav Tumanov
  */
@@ -24,7 +24,7 @@ public class AnimalRepositoryImpl implements AnimalRepository {
     /** Поле для хранения единственного экземпляра данного класса */
     private static AnimalRepositoryImpl instance;
 
-    /** Запрещено создавать экземпляры данного класса. */
+    /** Запрещено создавать больше одного экземпляра данного класса. */
     private AnimalRepositoryImpl() { }
 
     /**
@@ -42,10 +42,12 @@ public class AnimalRepositoryImpl implements AnimalRepository {
     /**
      * Метод для получения всех животных из репозитория.
      * @return Список всех животных.
-     * @throws RepositoryException если возникли проблемы с доступом.
+     * @throws RepositoryException если возникли проблемы с чтением данных.
      */
     @Override
-    public List<String> getAnimals() throws RepositoryException {
-        return dataRepository.findAll();
+    public List<String[]> getAnimals() throws RepositoryException {
+        return dataRepository.findAll().stream()
+                .map(animal -> animal.split(";"))
+                .collect(Collectors.toList());
     }
 }

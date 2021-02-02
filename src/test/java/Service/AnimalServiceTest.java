@@ -1,5 +1,6 @@
 package Service;
 
+import Exceptions.ColumnIndexOutOfBoundsException;
 import Exceptions.OperatorException;
 import Exceptions.ParenthesisException;
 import Repository.AnimalRepository;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import static java.util.List.of;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -17,7 +19,7 @@ import java.util.List;
 
 class AnimalServiceTest {
 
-    private static List<String> animals;
+    private static List<String[]> animals;
 
     private AnimalRepository animalRepository;
 
@@ -29,10 +31,10 @@ class AnimalServiceTest {
 
     @BeforeAll
     static void beforeAll() {
-        animals = List.of(
-                "ЛЕГКОЕ;МАЛЕНЬКОЕ;ВСЕЯДНОЕ",
-                "ТЯЖЕЛОЕ;МАЛЕНЬКОЕ;ТРАВОЯДНОЕ",
-                "ТЯЖЕЛОЕ;НЕВЫСОКОЕ;ТРАВОЯДНОЕ");
+        animals = of(
+                new String[]{"ЛЕГКОЕ", "МАЛЕНЬКОЕ", "ВСЕЯДНОЕ"},
+                new String[]{"ТЯЖЕЛОЕ", "МАЛЕНЬКОЕ", "ТРАВОЯДНОЕ"},
+                new String[]{"ТЯЖЕЛОЕ", "НЕВЫСОКОЕ", "ТРАВОЯДНОЕ"});
     }
 
     @BeforeEach
@@ -46,8 +48,8 @@ class AnimalServiceTest {
 
     @Test
     void correctResult() {
-        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(List.of("ТРАВОЯДНОЕ",
-                "(ТРАВОЯДНОЕ or ПЛОТОЯДНОЕ) and МАЛЕНЬКОЕ", "ВСЕЯДНОЕ and not ВЫСОКОЕ")));
+        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(of("3=ТРАВОЯДНОЕ",
+                "(3=ТРАВОЯДНОЕ or 3=ПЛОТОЯДНОЕ) and 2=МАЛЕНЬКОЕ", "3=ВСЕЯДНОЕ and not 2=ВЫСОКОЕ")));
         assertDoesNotThrow(() -> animalService.run());
         Mockito.verify(view, Mockito.times(1)).show(2L);
         Mockito.verify(view, Mockito.times(2)).show(1L);
@@ -55,52 +57,58 @@ class AnimalServiceTest {
 
     @Test
     void exceptionOperators() {
-        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(List.of("")));
+        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(of("")));
         assertThrows(OperatorException.class, ()-> animalService.run());
 
-        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(List.of("ТРАВОЯДНОЕ not")));
+        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(of("3=ТРАВОЯДНОЕ not")));
         assertThrows(OperatorException.class, ()-> animalService.run());
 
-        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(List.of("ВСЕЯДНОЕ not and ТРАВОЯДНОЕ")));
+        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(of("3=ВСЕЯДНОЕ not and 3=ТРАВОЯДНОЕ")));
         assertThrows(OperatorException.class, ()-> animalService.run());
 
-        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(List.of("ВСЕЯДНОЕ or and ТРАВОЯДНОЕ")));
+        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(of("3=ВСЕЯДНОЕ or and 3=ТРАВОЯДНОЕ")));
         assertThrows(OperatorException.class, ()-> animalService.run());
 
-        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(List.of("or ВСЕЯДНОЕ and ТРАВОЯДНОЕ")));
+        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(of("or 3=ВСЕЯДНОЕ and 3=ТРАВОЯДНОЕ")));
         assertThrows(OperatorException.class, ()-> animalService.run());
 
-        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(List.of("ВСЕЯДНОЕ ТРАВОЯДНОЕ")));
+        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(of("3=ВСЕЯДНОЕ 3=ТРАВОЯДНОЕ")));
         assertThrows(OperatorException.class, ()-> animalService.run());
     }
 
     @Test
     void exceptionParenthesis() {
-        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(List.of(")ТРАВОЯДНОЕ")));
+        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(of(")3=ТРАВОЯДНОЕ")));
         assertThrows(ParenthesisException.class, ()-> animalService.run());
 
-        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(List.of("ТРАВОЯДНОЕ (")));
+        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(of("3=ТРАВОЯДНОЕ (")));
         assertThrows(ParenthesisException.class, ()-> animalService.run());
 
-        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(List.of(")ТРАВОЯДНОЕ(")));
+        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(of(")3=ТРАВОЯДНОЕ(")));
         assertThrows(ParenthesisException.class, ()-> animalService.run());
 
         assertDoesNotThrow(() -> when(rulesRepository.getRules())
-                .thenReturn(List.of("(ТРАВОЯДНОЕ or ПЛОТОЯДНОЕ) and МАЛЕНЬКОЕ)")));
+                .thenReturn(of("(3=ТРАВОЯДНОЕ or 3=ПЛОТОЯДНОЕ) and 3=МАЛЕНЬКОЕ)")));
         assertThrows(ParenthesisException.class, ()-> animalService.run());
     }
 
     @Test
+    void exceptionColumnIndex() {
+        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(of("4=ТРАВОЯДНОЕ")));
+        assertThrows(ColumnIndexOutOfBoundsException.class, () -> animalService.run());
+    }
+
+    @Test
     void withoutAnimals() {
-        assertDoesNotThrow(() -> when(animalRepository.getAnimals()).thenReturn(List.of("")));
-        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(List.of("ТРАВОЯДНОЕ")));
+        assertDoesNotThrow(() -> when(animalRepository.getAnimals()).thenReturn(List.<String[]>of(new String[] {""})));
+        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(of("1=ТРАВОЯДНОЕ")));
         assertDoesNotThrow(() -> animalService.run());
         Mockito.verify(view).show(0L);
     }
 
     @Test
     void withoutRules() {
-        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(List.of()));
+        assertDoesNotThrow(() -> when(rulesRepository.getRules()).thenReturn(of()));
         assertDoesNotThrow(() -> animalService.run());
         Mockito.verify(view, Mockito.never()).show(Mockito.anyLong());
     }

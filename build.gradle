@@ -1,17 +1,26 @@
 plugins {
     id 'java'
-    //id 'java-library'
     id 'idea'
     id 'application'
 }
 
-mainClassName = 'Main'
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(14)
+    }
+}
 
-sourceCompatibility = 14
-targetCompatibility = 14
+mainClassName = 'Main'
 
 jar {
     manifest.attributes('Main-Class': 'Main')
+}
+
+compileJava.options.encoding = 'UTF-8'
+compileTestJava.options.encoding = 'UTF-8'
+
+javadoc {
+    options.encoding = 'UTF-8'
 }
 
 group 'org.example'
@@ -23,8 +32,8 @@ repositories {
 
 dependencies {
     testImplementation(platform('org.junit:junit-bom:5.7.0'))
-    testImplementation('org.junit.jupiter:junit-jupiter')
-    testCompile group: 'org.mockito', name: 'mockito-core', version: '3.7.7'
+    testImplementation('org.junit.jupiter:junit-jupiter:5.7.0')
+    testImplementation('org.mockito:mockito-core:3.7.7')
 }
 
 test {

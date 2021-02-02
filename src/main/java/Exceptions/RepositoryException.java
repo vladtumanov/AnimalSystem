@@ -5,7 +5,7 @@ package Exceptions;
  *
  * @author Vladislav Tumanov
  */
-public class RepositoryException extends Exception {
+public class RepositoryException extends RuntimeException {
 
     /**
      * Создаёт исключение {@code RepositoryException} с указанным подробным сообщением.

@@ -16,5 +16,5 @@ public interface AnimalRepository {
      * @return Список всех животных.
      * @throws RepositoryException если возникли проблемы с доступом.
      */
-    List<String> getAnimals() throws RepositoryException;
+    List<String[]> getAnimals() throws RepositoryException;
 }

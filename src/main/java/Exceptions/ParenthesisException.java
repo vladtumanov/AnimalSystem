@@ -6,7 +6,7 @@ package Exceptions;
  *
  * @author Vladislav Tumanov
  */
-public class ParenthesisException extends Exception {
+public class ParenthesisException extends RuntimeException {
 
     /**
      * Создаёт исключение {@code ParenthesisException} с указанным подробным сообщением.
